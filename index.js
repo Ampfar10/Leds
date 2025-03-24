@@ -37,7 +37,7 @@ function selectDevice() {
         if (index >= 0 && index < devices.length) {
             const selectedDevice = devices[index];
             console.log(`\n✅ Selected device: ${selectedDevice.name || 'Unknown'} (${selectedDevice.address})`);
-            btSerial.cancelInquiry();  // Stop scanning
+            btSerial.stopInquiry();  // Stop scanning manually
 
             connectToDevice(selectedDevice);
         } else {
@@ -76,7 +76,7 @@ setTimeout(() => {
         process.exit();
     }
     selectDevice();
-}, 10000);  // Scans for 10 seconds
+}, 30000);  // Scans for 10 seconds
 
 // Begin scanning for devices
 startScanning();

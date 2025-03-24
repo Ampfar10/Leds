@@ -21,10 +21,13 @@ async def connect_to_led(mac_address):
             for characteristic in service.characteristics:
                 print(f"  Characteristic: {characteristic.uuid} - Properties: {characteristic.properties}")
 
-                # Subscribe to notifications if the characteristic supports notifications
+                # Subscribe to notifications only if the characteristic supports 'notify'
                 if 'notify' in characteristic.properties:
                     print(f"  Subscribing to notifications on {characteristic.uuid}")
-                    await client.start_notify(characteristic, notification_handler)
+                    try:
+                        await client.start_notify(characteristic, notification_handler)
+                    except Exception as e:
+                        print(f"❗ Failed to subscribe to {characteristic.uuid}: {e}")
 
         # Keep the script running to listen for notifications
         print("Listening for data... Press CTRL+C to stop.")

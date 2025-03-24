@@ -1,0 +1,47 @@
+import asyncio
+from bleak import BleakScanner, BleakClient
+
+async def notification_handler(sender, data):
+    try:
+        print(f"📥 Data from {sender}: {data.hex()} | {data.decode(errors='ignore')}")
+    except UnicodeDecodeError:
+        print(f"📥 Data from {sender}: {data.hex()} (Undecodable Text)")
+
+async def connect_to_led(mac_address):
+    async with BleakClient(mac_address) as client:
+        print(f"✅ Connected to {mac_address}")
+
+        services = await client.get_services()
+        for service in services:
+            for char in service.characteristics:
+                if 'notify' in char.properties:
+                    print(f"🔔 Subscribing to characteristic: {char.uuid}")
+                    await client.start_notify(char.uuid, notification_handler)
+                else:
+                    print(f"⚠️ Characteristic {char.uuid} does not support notifications.")
+
+        print("📡 Listening for data... (Press CTRL+C to stop)")
+        await asyncio.Future()  # Keep the script running
+
+async def scan_for_devices():
+    print("🔍 Scanning for devices...")
+    devices = await BleakScanner.discover(timeout=30)
+
+    for i, device in enumerate(devices):
+        print(f"{i + 1}) {device.name or 'Unknown'} - {device.address}")
+
+    if not devices:
+        print("❌ No devices found.")
+        return None
+
+    selected = int(input("\n🔹 Select a device by number: ")) - 1
+    return devices[selected].address if 0 <= selected < len(devices) else None
+
+async def main():
+    mac_address = await scan_for_devices()
+    if mac_address:
+        await connect_to_led(mac_address)
+    else:
+        print("❌ No valid device selected. Exiting...")
+
+asyncio.run(main())

@@ -21,21 +21,16 @@ async def connect_to_led(mac_address):
             for characteristic in service.characteristics:
                 print(f"  Characteristic: {characteristic.uuid} - Properties: {characteristic.properties}")
 
-                # Subscribe to notifications only if the characteristic supports 'notify'
-                if 'notify' in characteristic.properties:
-                    print(f"  Subscribing to notifications on {characteristic.uuid}")
+                # Attempt to read the characteristic value periodically
+                if 'read' in characteristic.properties:
+                    print(f"  Reading characteristic {characteristic.uuid}")
                     try:
-                        await client.start_notify(characteristic, notification_handler)
+                        while True:
+                            data = await client.read_gatt_char(characteristic)
+                            print(f"📥 Data from {characteristic.uuid}: {data.hex()}")
+                            await asyncio.sleep(1)  # Wait for 1 second before reading again
                     except Exception as e:
-                        print(f"❗ Failed to subscribe to {characteristic.uuid}: {e}")
-
-        # Keep the script running to listen for notifications
-        print("Listening for data... Press CTRL+C to stop.")
-        await asyncio.Future()  # Keeps the script running
-
-# This is the callback that handles received data
-def notification_handler(sender, data):
-    print(f"📥 Data received from {sender}: {data.hex()}")
+                        print(f"❗ Failed to read {characteristic.uuid}: {e}")
 
 # Run the async function to connect and listen
 asyncio.run(connect_to_led(LED_MAC_ADDRESS))
